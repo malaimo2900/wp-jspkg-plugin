@@ -7,6 +7,18 @@
 
 
 class WPJSPKG {
+	private $config = null;
+	private static $addedScripts = array();
+	
+	
+	public static function addScript($name, $script, $version) {
+		self::$addedScripts[] = array($name, $script, $version);
+	}
+	
+	public function __construct(array $config) {
+		$this->config = array_merge($config, self::$addedScripts);
+	}
+	
     public function init() {
         add_action('wp_enqueue_scripts', array($this, "wp_jspkg_plugin_init"));
         
@@ -34,14 +46,8 @@ class WPJSPKG {
 	    	'Toggle JavaScript Package Settings', 
 	    	null,
 	    	'wp_jskpg_admin'
-    	);
-    	$settingsConfig = array(
-    			array('emberjs', 'Ember JS'), 
-    			array('angular', 'Angular JS'),
-    			array('backbone', 'Backbone JS')
-    	);
-    	foreach ($settingsConfig as $setting) {
-    		$optName = 'wp_jspkg_'.$setting[0];
+    	);;
+    	foreach ($this->config['extJs'] as $optName => $setting) {;
     		register_setting(
 	    		'wp_jspkg_settings_opt_group',
 	    		$optName
@@ -68,21 +74,6 @@ class WPJSPKG {
     }
     
     
-    public function wp_jspkg_field_ember() {
-    	echo $this->wp_jspkg_field('emberjs');
-    }
-    
-    
-    public function wp_jspkg_field_angular() {
-    	echo $this->wp_jspkg_field('angular');
-    }
-    
-    
-    public function wp_jspkg_field_backbone() {
-    	echo $this->wp_jspkg_field('backbone');
-    }
-    
-    
     public function wp_jspkg_admin_page() {
 ?>
 	<div class="wrap">
@@ -100,14 +91,12 @@ class WPJSPKG {
     
     
     public function wp_jspkg_plugin_init($attr) {
-    	if (get_option('wp_jspkg_emberjs') == 1) {
-    		wp_enqueue_script('ember', WP_JSPKG_EMBER_JS_URL, null, '1.9.0', FALSE);
-    	}
-    	if (get_option('wp_jspkg_angular') == 1) {
-    		wp_enqueue_script('angular', WP_JSPKG_ANGULAR_JS_URL, null, '1.3.8', FALSE);
-    	}
-    	if (get_option('wp_jspkg_backbone') == 1) {
-    		wp_enqueue_script('backbone', WP_JSPKG_BACKBONE_JS_URL, null, '1.1.2', FALSE);
+    	wp_enqueue_script('jspkgApp', $this->config['mainJs'][0], null, $this->config['mainJs'][1], FALSE);
+    	
+    	foreach ($this->config['extJs'] as $option => $config) {
+	    	if (get_option($option) == 1) {
+	    		wp_enqueue_script($option, $config[2], null, $config[3], FALSE);
+	    	}
     	}
         
     	return  TRUE;
