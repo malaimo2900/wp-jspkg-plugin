@@ -20,7 +20,7 @@ define('WP_JSPKG_ANGULAR_JS_URL',  WP_JSPKG_PLUGIN_URL . '/js/angular.min.js' );
 define('WP_JSPKG_SYNAPSE_JS_URL',  WP_JSPKG_PLUGIN_URL . '/js/synapse-min.js' );
 
 
-include(WP_JSPKG_PATH. "/includes/wp-jspkg-main.php");
+require_once(WP_JSPKG_PATH. "/includes/wp-jspkg-main.php");
 
 
 $config = array(
@@ -31,8 +31,7 @@ $config = array(
 );
 
 
-$jspkg = new WPJSPKG($config);
-$jspkg->init();
+WPJSPKG::obj()->init($config);
 
 
 ?>

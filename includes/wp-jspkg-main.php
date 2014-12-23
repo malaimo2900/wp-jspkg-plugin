@@ -7,19 +7,27 @@
 
 
 class WPJSPKG {
-	private $config = null;
-	private static $addedScripts = array();
+	private $config = array();
+	private static $instance = null;
 	
 	
-	public static function addScript($name, $script, $version) {
-		self::$addedScripts[] = array($name, $script, $version);
+	public static function obj() {
+		if (!(self::$instance instanceof WPJSPKG)) {
+			self::$instance = new WPJSPKG();
+		}
+		
+		return self::$instance;
 	}
 	
-	public function __construct(array $config) {
-		$this->config = array_merge($config, self::$addedScripts);
+	public static function addScript($ext, $name, $script, $version) {
+		self::obj()->config = array_merge(self::obj()->config, array('wp_jspkg_'.$ext => array($name, $script, $version)));
 	}
 	
-    public function init() {
+	
+    public function init($config) {
+    	$this->config = array_merge($this->config, $config);
+    	
+    	
         add_action('wp_enqueue_scripts', array($this, "wp_jspkg_plugin_init"));
         
         if (is_admin()) {
@@ -47,7 +55,7 @@ class WPJSPKG {
 	    	null,
 	    	'wp_jskpg_admin'
     	);;
-    	foreach ($this->config['extJs'] as $optName => $setting) {;
+    	foreach ($this->config as $optName => $setting) {;
     		register_setting(
 	    		'wp_jspkg_settings_opt_group',
 	    		$optName
@@ -61,7 +69,7 @@ class WPJSPKG {
 	    	
 	    	add_settings_field(
 		    	$optName, 
-		    	'Enable/Disable '.$setting[1], 
+		    	'Enable/Disable '.$setting[0], 
 		    	function() use($option, $optName) {
 		    		printf('<input type="checkbox" id="'.$optName.'" name="'.$optName.'" value="1" %s />',
 		    				($option == 1 ? 'checked="checked"' : ''));
@@ -91,11 +99,9 @@ class WPJSPKG {
     
     
     public function wp_jspkg_plugin_init($attr) {
-    	wp_enqueue_script('jspkgApp', $this->config['mainJs'][0], null, $this->config['mainJs'][1], FALSE);
-    	
-    	foreach ($this->config['extJs'] as $option => $config) {
+    	foreach ($this->config as $option => $config) {
 	    	if (get_option($option) == 1) {
-	    		wp_enqueue_script($option, $config[2], null, $config[3], FALSE);
+	    		wp_enqueue_script($option, $config[1], null, $config[2], FALSE);
 	    	}
     	}
         
